@@ -13,4 +13,8 @@
     <ProjectReference Include="..\ProfiSysTask.Infrastructure\ProfiSysTask.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="ViewModels\" />
+  </ItemGroup>
+
 </Project>
