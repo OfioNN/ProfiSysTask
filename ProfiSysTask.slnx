@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="ProfiSysTask.Core/ProfiSysTask.Core.csproj" />
+  <Project Path="ProfiSysTask.Infrastructure/ProfiSysTask.Infrastructure.csproj" />
+  <Project Path="ProfiSysTask.UI/ProfiSysTask.UI.csproj" />
+</Solution>
