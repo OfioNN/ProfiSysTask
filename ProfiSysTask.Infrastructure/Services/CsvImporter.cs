@@ -2,10 +2,7 @@
 using CsvHelper.Configuration;
 using ProfiSysTask.Core.Interfaces;
 using ProfiSysTask.Core.Models;
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Text;
 
 namespace ProfiSysTask.Infrastructure.Services {
     public class CsvImporter : ICsvImporter {

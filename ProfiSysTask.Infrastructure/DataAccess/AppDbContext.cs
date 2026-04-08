@@ -1,8 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ProfiSysTask.Core.Models;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ProfiSysTask.Infrastructure.DataAccess {
     public class AppDbContext : DbContext {

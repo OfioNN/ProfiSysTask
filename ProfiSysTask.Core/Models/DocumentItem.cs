@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ProfiSysTask.Core.Models {
+﻿namespace ProfiSysTask.Core.Models {
     public class DocumentItem {
         public int Id { get; set; }
 
