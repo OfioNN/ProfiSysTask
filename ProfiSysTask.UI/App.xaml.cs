@@ -22,6 +22,8 @@ namespace ProfiSysTask.UI {
             services.AddTransient<ICsvImporter, CsvImporter>();
             services.AddTransient<IDocumentRepository, DocumentRepository>();
 
+            services.AddTransient<StartViewModel>();
+            services.AddTransient<DataViewModel>();
             services.AddTransient<MainViewModel>();
             services.AddTransient<MainWindow>();
         }

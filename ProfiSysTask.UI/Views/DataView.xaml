@@ -1,0 +1,50 @@
+﻿<UserControl x:Class="ProfiSysTask.UI.Views.DataView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="900">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
+            <Button Content="Importuj z CSV" Command="{Binding ImportDataCommand}" Width="120" Padding="5" Margin="0,0,10,0"/>
+            <Button Content="Pobierz z bazy" Command="{Binding LoadDataCommand}" Width="120" Padding="5" Margin="0,0,30,0"/>
+            <!--<TextBlock Text="Filtruj:" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="SemiBold"/>
+            <TextBox Width="200" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center" Padding="2"/>-->
+        </StackPanel>
+
+        <GroupBox Grid.Row="1" Header="Dokumenty (Wybierz wiersz, aby zobaczyć pozycje)" FontWeight="SemiBold">
+            <DataGrid ItemsSource="{Binding DocumentsView}" SelectedItem="{Binding SelectedDocument}" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" FontWeight="Normal">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="ID" Binding="{Binding Id}"/>
+                    <DataGridTextColumn Header="Typ" Binding="{Binding Type}"/>
+                    <DataGridTextColumn Header="Data" Binding="{Binding Date, StringFormat=\{0:yyyy-MM-dd\}}"/>
+                    <DataGridTextColumn Header="Imię" Binding="{Binding FirstName}"/>
+                    <DataGridTextColumn Header="Nazwisko" Binding="{Binding LastName}"/>
+                    <DataGridTextColumn Header="Miasto" Binding="{Binding City}"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </GroupBox>
+
+        <GridSplitter Grid.Row="2" Height="5" HorizontalAlignment="Stretch" Margin="0,5"/>
+
+        <GroupBox Grid.Row="3" Header="Pozycje wybranego dokumentu" FontWeight="SemiBold">
+            <DataGrid ItemsSource="{Binding SelectedDocument.Items}" AutoGenerateColumns="False" IsReadOnly="True" FontWeight="Normal">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Lp." Binding="{Binding Ordinal}"/>
+                    <DataGridTextColumn Header="Produkt" Binding="{Binding Product}"/>
+                    <DataGridTextColumn Header="Ilość" Binding="{Binding Quantity}"/>
+                    <DataGridTextColumn Header="Cena" Binding="{Binding Price, StringFormat=\{0:C\}}"/>
+                    <DataGridTextColumn Header="VAT (%)" Binding="{Binding TaxRate}"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </GroupBox>
+    </Grid>
+</UserControl>
