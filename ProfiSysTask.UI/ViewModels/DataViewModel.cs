@@ -19,9 +19,16 @@ namespace ProfiSysTask.UI.ViewModels
         [ObservableProperty]
         private Document? _selectedDocument;
 
+        public Action? GoBackRequested { get; set; }
+
         public DataViewModel(IDocumentRepository repository, ICsvImporter csvImporter) {
             _repository = repository;
             _csvImporter = csvImporter;
+        }
+
+        [RelayCommand]
+        private void GoBack() {
+            GoBackRequested?.Invoke();
         }
 
         [RelayCommand]
