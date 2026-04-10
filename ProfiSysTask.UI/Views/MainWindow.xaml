@@ -20,8 +20,8 @@
             <Button Content="Importuj z CSV" Command="{Binding ImportDataCommand}" Width="120" Padding="5" Margin="0,0,10,0"/>
             <Button Content="Pobierz z bazy" Command="{Binding LoadDataCommand}" Width="120" Padding="5" Margin="0,0,30,0"/>
 
-            <TextBlock Text="Filtruj:" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="SemiBold"/>
-            <TextBox Width="200" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center" Padding="2"/>
+            <!--<TextBlock Text="Filtruj:" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="SemiBold"/>-->
+            <!--<TextBox Width="200" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center" Padding="2"/>-->
         </StackPanel>
 
         <GroupBox Grid.Row="1" Header="Dokumenty" FontWeight="SemiBold">

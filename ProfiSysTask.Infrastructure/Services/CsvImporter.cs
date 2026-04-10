@@ -10,7 +10,9 @@ namespace ProfiSysTask.Infrastructure.Services {
 
             var csvConfig = new CsvConfiguration(CultureInfo.GetCultureInfo("pl-PL")) {
                 HasHeaderRecord = true,
-                Delimiter = ","
+                Delimiter = ";",
+                HeaderValidated = null,
+                MissingFieldFound = null
             };
 
             using var docReader = new StreamReader(documentsFilePath);
