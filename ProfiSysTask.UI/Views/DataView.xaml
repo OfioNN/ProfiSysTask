@@ -420,17 +420,34 @@
                     </DataGrid.Columns>
                 </DataGrid>
 
-                <StackPanel Grid.Column="1" Margin="15,0,0,0">
+                <StackPanel Grid.Column="1" Margin="10,0,0,0">
                     <StackPanel Orientation="Horizontal">
-                        <Button Content="+" Background="#008A00" Style="{StaticResource RoundActionButtonStyle}" Command="{Binding AddItemCommand}"/>
-                        <Button Content="Wszystko ▼" Style="{StaticResource PillButtonStyle}" Margin="10,0,0,10"/>
+                        <Button Background="#008A00" Margin="0,5,10,5" Style="{StaticResource RoundActionButtonStyle}" Command="{Binding AddItemCommand}" ToolTip="Dodaj nową pozycję">
+                            <iconPacks:PackIconMaterial Kind="Plus" Width="14" Height="14" Margin="0,1,0,0"/>
+                        </Button>
+
+                        <ComboBox Width="120" Margin="0,0,0,5" 
+                                  Style="{StaticResource PillComboBoxStyle}"
+                                  ItemsSource="{Binding ItemFilterColumns}"
+                                  SelectedItem="{Binding SelectedItemFilterColumn, UpdateSourceTrigger=PropertyChanged}">
+                        </ComboBox>
                     </StackPanel>
+
                     <StackPanel Orientation="Horizontal">
-                        <Button Content="✎" Background="#996600" Style="{StaticResource RoundActionButtonStyle}" Command="{Binding EditItemCommand}"/>
-                        <Button Content="....." Style="{StaticResource PillButtonStyle}" Margin="10,0,0,10"/>
+                        <Button Background="#996600" Margin="0,5,10,5" Style="{StaticResource RoundActionButtonStyle}" Command="{Binding EditItemCommand}" ToolTip="Edytuj wybraną pozycję">
+                            <iconPacks:PackIconMaterial Kind="Pencil" Width="14" Height="14"/>
+                        </Button>
+
+                        <TextBox Width="120" Margin="0,0,0,0" 
+                                 Style="{StaticResource PillTextBoxStyle}"
+                                 Text="{Binding ItemSearchText, UpdateSourceTrigger=PropertyChanged}" 
+                                 Tag="Szukaj..."/>
                     </StackPanel>
+
                     <StackPanel Orientation="Horizontal">
-                        <Button Content="-" Background="#990000" Style="{StaticResource RoundActionButtonStyle}" Command="{Binding DeleteItemCommand}"/>
+                        <Button Background="#990000" Margin="0,5,10,5" Style="{StaticResource RoundActionButtonStyle}" Command="{Binding DeleteItemCommand}" ToolTip="Usuń wybraną pozycję">
+                            <iconPacks:PackIconMaterial Kind="Delete" Width="14" Height="14"/>
+                        </Button>
                     </StackPanel>
                 </StackPanel>
             </Grid>

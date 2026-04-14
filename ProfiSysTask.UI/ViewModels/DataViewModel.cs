@@ -4,6 +4,7 @@ using Microsoft.Win32;
 using ProfiSysTask.Core.Interfaces;
 using ProfiSysTask.Core.Models;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Data;
 
@@ -22,7 +23,20 @@ namespace ProfiSysTask.UI.ViewModels
 
         public Action? GoBackRequested { get; set; }
 
+
         public List<string> FilterColumns { get; } = new List<string> { "Wszystko", "Typ", "Imię", "Nazwisko", "Miasto"};
+        public List<string> ItemFilterColumns { get; } = new List<string> { "Wszystko", "Produkt", "Cena", "VAT" };
+
+        [ObservableProperty]
+        private string _searchText = string.Empty;
+        [ObservableProperty]
+        private string _selectedFilterColumn = "Wszystko";
+
+        [ObservableProperty]
+        private string _itemSearchText = string.Empty;
+        [ObservableProperty]
+        private string _selectedItemFilterColumn = "Wszystko";
+        public ICollectionView? ItemsView { get; private set; }
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(PreviousPageCommand))]
@@ -38,11 +52,8 @@ namespace ProfiSysTask.UI.ViewModels
         private bool CanGoPrevious() => CurrentPage > 1;
         private bool CanGoNext() => CurrentPage < TotalPages;
 
-        [ObservableProperty]
-        private string _searchText = string.Empty;
-
-        [ObservableProperty]
-        private string _selectedFilterColumn = "Wszystko";
+        partial void OnItemSearchTextChanged(string value) => ItemsView?.Refresh();
+        partial void OnSelectedItemFilterColumnChanged(string value) => ItemsView?.Refresh();
 
 
         public DataViewModel(IDocumentRepository repository, ICsvImporter csvImporter) {
@@ -119,6 +130,38 @@ namespace ProfiSysTask.UI.ViewModels
                 MessageBox.Show($"Błąd podczas ładowania danych: {ex.Message}", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
+        }
+
+        partial void OnSelectedDocumentChanged(Document? value) {
+            if (value != null && value.Items != null) {
+                ItemsView = CollectionViewSource.GetDefaultView(value.Items);
+                ItemsView.Filter = FilterItems;
+            }
+            else {
+                ItemsView = null;
+            }
+            OnPropertyChanged(nameof(ItemsView));
+        }
+
+        private bool FilterItems(object obj) {
+            if (obj is not DocumentItem item) return false;
+            if (string.IsNullOrWhiteSpace(ItemSearchText)) return true;
+
+            string search = ItemSearchText.ToLower();
+
+            switch (SelectedItemFilterColumn) {
+                case "Produkt":
+                    return item.Product != null && item.Product.ToLower().Contains(search);
+                case "Cena":
+                    return item.Price.ToString().Contains(search);
+                case "VAT":
+                    return item.TaxRate.ToString().Contains(search);
+                case "Wszystko":
+                default:
+                    return (item.Product != null && item.Product.ToLower().Contains(search)) ||
+                           item.Price.ToString().Contains(search) ||
+                           item.TaxRate.ToString().Contains(search);
+            }
         }
     }
 }
