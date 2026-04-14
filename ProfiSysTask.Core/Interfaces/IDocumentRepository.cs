@@ -9,5 +9,9 @@ namespace ProfiSysTask.Core.Interfaces {
 
         Task ClearDatabaseAsync();
 
+        Task<int> GetTotalDocumentsCountAsync(string searchText, string searchColumn);
+
+        Task<IEnumerable<Document>> GetPagedDocumentsAsync(int pageNumber, int pageSize, string searchText, string searchColumn);
+
     }
 }

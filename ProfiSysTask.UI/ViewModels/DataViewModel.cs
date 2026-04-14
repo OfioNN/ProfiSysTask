@@ -5,6 +5,7 @@ using ProfiSysTask.Core.Interfaces;
 using ProfiSysTask.Core.Models;
 using System.Collections.ObjectModel;
 using System.Windows;
+using System.Windows.Data;
 
 namespace ProfiSysTask.UI.ViewModels
 {
@@ -21,6 +22,29 @@ namespace ProfiSysTask.UI.ViewModels
 
         public Action? GoBackRequested { get; set; }
 
+        public List<string> FilterColumns { get; } = new List<string> { "Wszystko", "Typ", "Imię", "Nazwisko", "Miasto"};
+
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(PreviousPageCommand))]
+        [NotifyCanExecuteChangedFor(nameof(NextPageCommand))]
+        private int _currentPage = 1;
+
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(NextPageCommand))]
+        private int _totalPages = 1;
+
+        private readonly int _pageSize = 50;
+
+        private bool CanGoPrevious() => CurrentPage > 1;
+        private bool CanGoNext() => CurrentPage < TotalPages;
+
+        [ObservableProperty]
+        private string _searchText = string.Empty;
+
+        [ObservableProperty]
+        private string _selectedFilterColumn = "Wszystko";
+
+
         public DataViewModel(IDocumentRepository repository, ICsvImporter csvImporter) {
             _repository = repository;
             _csvImporter = csvImporter;
@@ -29,6 +53,28 @@ namespace ProfiSysTask.UI.ViewModels
         [RelayCommand]
         private void GoBack() {
             GoBackRequested?.Invoke();
+        }
+
+        [RelayCommand(CanExecute = nameof(CanGoPrevious))]
+        private async Task PreviousPageAsync() {
+            CurrentPage--;
+            await LoadDataAsync();
+        }
+
+        [RelayCommand(CanExecute = nameof(CanGoNext))]
+        private async Task NextPageAsync() {
+            CurrentPage++;
+            await LoadDataAsync();
+        }
+
+        partial void OnSearchTextChanged(string value) {
+            CurrentPage = 1;
+            _ = LoadDataAsync();
+        }
+
+        partial void OnSelectedFilterColumnChanged(string value) {
+            CurrentPage = 1;
+            _ = LoadDataAsync();
         }
 
         [RelayCommand]
@@ -51,8 +97,6 @@ namespace ProfiSysTask.UI.ViewModels
                 await _repository.ClearDatabaseAsync();
                 await _repository.SaveDocumentsAsync(importedDocuments);
 
-                MessageBox.Show("Dane zostały pomyślnie zaimportowane i zapisane w bazie danych.", "Sukces", MessageBoxButton.OK, MessageBoxImage.Information);
-
                 await LoadDataAsync();
             }
             catch (Exception ex) {
@@ -63,11 +107,13 @@ namespace ProfiSysTask.UI.ViewModels
         [RelayCommand]
         public async Task LoadDataAsync() {
             try {
-                var data = await _repository.GetAllDocumentsAsync();
+                int totalItems = await _repository.GetTotalDocumentsCountAsync(SearchText, SelectedFilterColumn);
+                TotalPages = (int)Math.Ceiling((double)totalItems / _pageSize);
+                if (TotalPages == 0) TotalPages = 1;
 
-                Documents = new ObservableCollection<Document>(data);
+                var pagedData = await _repository.GetPagedDocumentsAsync(CurrentPage, _pageSize, SearchText, SelectedFilterColumn);
 
-                MessageBox.Show($"Pomyślnie załadowano {Documents.Count} dokumentów z bazy.", "Sukces", MessageBoxButton.OK, MessageBoxImage.Information);
+                Documents = new ObservableCollection<Document>(pagedData);
             }
             catch (Exception ex) {
                 MessageBox.Show($"Błąd podczas ładowania danych: {ex.Message}", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);

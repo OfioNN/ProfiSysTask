@@ -27,5 +27,49 @@ namespace ProfiSysTask.Infrastructure.DataAccess {
             await _context.SaveChangesAsync();
         }
 
+        public async Task<int> GetTotalDocumentsCountAsync(string searchText, string searchColumn) {
+            var query = BuildFilterQuery(searchText, searchColumn);
+            return await query.CountAsync();
+        }
+
+        public async Task<IEnumerable<Document>> GetPagedDocumentsAsync(int pageNumber, int pageSize, string searchText, string searchColumn) {
+            var query = BuildFilterQuery(searchText, searchColumn);
+
+            return await query
+                .Include(d => d.Items)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
+
+        private IQueryable<Document> BuildFilterQuery(string searchText, string searchColumn) {
+            var query = _context.Documents.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(searchText)) {
+                switch (searchColumn) {
+                    case "Imię":
+                        query = query.Where(d => d.FirstName.Contains(searchText));
+                        break;
+                    case "Nazwisko":
+                        query = query.Where(d => d.LastName.Contains(searchText));
+                        break;
+                    case "Miasto":
+                        query = query.Where(d => d.City.Contains(searchText));
+                        break;
+                    case "Typ":
+                        query = query.Where(d => d.Type.Contains(searchText));
+                        break;
+                    default:
+                        query = query.Where(d =>
+                            d.FirstName.Contains(searchText) ||
+                            d.LastName.Contains(searchText) ||
+                            d.City.Contains(searchText) ||
+                            d.Type.Contains(searchText));
+                        break;
+                }
+            }
+            return query;
+        }
+
     }
 }
