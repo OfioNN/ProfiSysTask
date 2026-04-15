@@ -17,6 +17,7 @@ namespace ProfiSysTask.UI.ViewModels
         private readonly IDocumentRepository _repository;
         private readonly ICsvImporter _csvImporter;
         private readonly ICsvExporter _csvExporter;
+        private readonly IReportGenerator _reportGenerator;
 
         [ObservableProperty]
         private ObservableCollection<Document> _documents = new();
@@ -73,10 +74,11 @@ namespace ProfiSysTask.UI.ViewModels
         partial void OnSelectedItemFilterColumnChanged(string value) => ItemsView?.Refresh();
 
 
-        public DataViewModel(IDocumentRepository repository, ICsvImporter csvImporter, ICsvExporter csvExporter) {
+        public DataViewModel(IDocumentRepository repository, ICsvImporter csvImporter, ICsvExporter csvExporter, IReportGenerator reportGenerator) {
             _repository = repository;
             _csvImporter = csvImporter;
             _csvExporter = csvExporter;
+            _reportGenerator = reportGenerator;
         }
 
         [RelayCommand]
@@ -175,6 +177,37 @@ namespace ProfiSysTask.UI.ViewModels
                 MessageBox.Show($"Błąd podczas ładowania danych: {ex.Message}", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
             }
 
+        }
+
+        [RelayCommand]
+        private async Task GenerateReportAsync() {
+            if (SelectedDocument == null) {
+                await ShowConfirmDialogAsync("Informacja", "Najpierw zaznacz na liście dokument, dla którego chcesz wygenerować raport.", true);
+                return;
+            }
+
+            try {
+                var saveFileDialog = new Microsoft.Win32.SaveFileDialog {
+                    Title = "Zapisz raport PDF",
+                    Filter = "Plik PDF (*.pdf)|*.pdf",
+                    FileName = $"Raport_Dokument_{SelectedDocument.Id}_{DateTime.Now:yyyyMMdd}"
+                };
+
+                if (saveFileDialog.ShowDialog() != true) return;
+
+                string filePath = saveFileDialog.FileName;
+
+                await _reportGenerator.GenerateDocumentReportAsync(SelectedDocument, filePath);
+
+                var processInfo = new System.Diagnostics.ProcessStartInfo {
+                    FileName = filePath,
+                    UseShellExecute = true
+                };
+                System.Diagnostics.Process.Start(processInfo);
+            }
+            catch (Exception ex) {
+                MessageBox.Show($"Wystąpił błąd podczas generowania raportu: {ex.Message}", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         [RelayCommand]

@@ -21,6 +21,7 @@ namespace ProfiSysTask.UI {
 
             services.AddTransient<ICsvImporter, CsvImporter>();
             services.AddTransient<ICsvExporter, CsvExporter>();
+            services.AddTransient<IReportGenerator, QuestPdfReportGenerator>();
             services.AddTransient<IDocumentRepository, DocumentRepository>();
 
             services.AddTransient<StartViewModel>();
