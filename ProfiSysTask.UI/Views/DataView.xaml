@@ -957,5 +957,23 @@
                 </StackPanel>
             </Border>
         </Grid>
+
+        <Grid Grid.ColumnSpan="2" 
+              Background="#80000000" 
+              Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}" 
+              Panel.ZIndex="1000">
+
+            <Border Background="White" CornerRadius="12" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="30,20">
+                <Border.Effect>
+                    <DropShadowEffect ShadowDepth="4" BlurRadius="20" Opacity="0.3"/>
+                </Border.Effect>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <iconPacks:PackIconMaterial Kind="Loading" Spin="True" Width="18" Height="18" Foreground="#007CC3" VerticalAlignment="Center"/>
+
+                    <TextBlock Text="Przetwarzanie danych..." FontSize="16" FontWeight="SemiBold" Foreground="#333333" Margin="20,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>

@@ -41,6 +41,9 @@ namespace ProfiSysTask.UI.ViewModels
         public List<string> DateOperators { get; } = new List<string> { "Dnia", "Powyżej", "Poniżej" };
 
         [ObservableProperty]
+        private bool _isLoading;
+
+        [ObservableProperty]
         private DateTime? _searchDate = DateTime.Now;
 
         [ObservableProperty]
@@ -198,7 +201,9 @@ namespace ProfiSysTask.UI.ViewModels
                 if (openFileDialog.ShowDialog() != true) return;
                 string itemsPath = openFileDialog.FileName;
 
-                var importedDocuments = _csvImporter.Import(documentsPath, itemsPath);
+                IsLoading = true;
+
+                var importedDocuments = await Task.Run(() => _csvImporter.Import(documentsPath, itemsPath));
 
                 await _repository.ClearDatabaseAsync();
                 await _repository.SaveDocumentsAsync(importedDocuments);
@@ -207,6 +212,9 @@ namespace ProfiSysTask.UI.ViewModels
             }
             catch (Exception ex) {
                 MessageBox.Show($"Wystąpił błąd podczas importu: {ex.Message}", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally {
+                IsLoading = false;
             }
         }
 
@@ -242,6 +250,7 @@ namespace ProfiSysTask.UI.ViewModels
 
         [RelayCommand]
         public async Task LoadDataAsync() {
+            IsLoading = true;
             try {
                 int? savedDocumentId = SelectedDocument?.Id;
 
@@ -262,6 +271,9 @@ namespace ProfiSysTask.UI.ViewModels
             }
             catch (Exception ex) {
                 MessageBox.Show($"Błąd podczas ładowania danych: {ex.Message}", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally {
+                IsLoading = false;
             }
         }
 
