@@ -8,6 +8,7 @@
              d:DesignHeight="600" d:DesignWidth="900"
              Background="#E6E6E6">
     <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
         <Style x:Key="ModernSidebarButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
@@ -528,6 +529,90 @@
                     </StackPanel>
                 </StackPanel>
             </Grid>
+        </Grid>
+        <Grid Grid.ColumnSpan="2" 
+              Background="#B2000000" 
+              Visibility="{Binding IsConfirmDialogOpen, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}" 
+              Panel.ZIndex="999">
+
+            <Border Background="White" CornerRadius="12" VerticalAlignment="Center" HorizontalAlignment="Center" Width="450" Padding="25">
+                <Border.Effect>
+                    <DropShadowEffect ShadowDepth="4" BlurRadius="20" Opacity="0.3"/>
+                </Border.Effect>
+
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                        <iconPacks:PackIconMaterial Width="24" Height="24" VerticalAlignment="Center">
+                            <iconPacks:PackIconMaterial.Style>
+                                <Style TargetType="iconPacks:PackIconMaterial">
+                                    <Setter Property="Kind" Value="AlertCircleOutline"/>
+                                    <Setter Property="Foreground" Value="#990000"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsInfoOnlyMode}" Value="True">
+                                            <Setter Property="Kind" Value="InformationOutline"/>
+                                            <Setter Property="Foreground" Value="#007CC3"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </iconPacks:PackIconMaterial.Style>
+                        </iconPacks:PackIconMaterial>
+
+                        <TextBlock Text="{Binding ConfirmDialogTitle}" FontSize="18" FontWeight="Bold" Foreground="#333333" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding ConfirmDialogMessage}" TextWrapping="Wrap" FontSize="14" Foreground="#555555" Margin="0,0,0,25" LineHeight="20"/>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+
+                        <Button Command="{Binding ConfirmDialogNoCommand}" Width="100">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource PillButtonStyle}">
+                                    <Setter Property="Content" Value="Anuluj"/>
+                                    <Setter Property="Background" Value="#666666"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsInfoOnlyMode}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+
+                        <Button Command="{Binding ConfirmDialogYesCommand}" Width="120" Margin="15,0,0,0">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource PillButtonStyle}">
+                                    <Setter Property="Content" Value="Tak, usuń"/>
+                                    <Setter Property="Background" Value="#990000"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsInfoOnlyMode}" Value="True">
+                                            <Setter Property="Content" Value="Rozumiem"/>
+                                            <Setter Property="Background" Value="#007CC3"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Grid>
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="15"/>
+                                        <Border x:Name="Overlay" Background="Black" CornerRadius="15" Opacity="0"/>
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Overlay" Property="Opacity" Value="0.15"/>
+                                        </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter TargetName="Overlay" Property="Opacity" Value="0.3"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+
+                    </StackPanel>
+                </StackPanel>
+            </Border>
         </Grid>
     </Grid>
 </UserControl>

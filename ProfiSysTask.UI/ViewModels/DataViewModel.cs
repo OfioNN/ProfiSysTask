@@ -39,6 +39,20 @@ namespace ProfiSysTask.UI.ViewModels
         public ICollectionView? ItemsView { get; private set; }
 
         [ObservableProperty]
+        private bool _isConfirmDialogOpen;
+
+        [ObservableProperty]
+        private string _confirmDialogTitle = string.Empty;
+
+        [ObservableProperty]
+        private string _confirmDialogMessage = string.Empty;
+
+        [ObservableProperty]
+        private bool _isInfoOnlyMode;
+
+        private TaskCompletionSource<bool>? _dialogTaskCompletionSource;
+
+        [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(PreviousPageCommand))]
         [NotifyCanExecuteChangedFor(nameof(NextPageCommand))]
         private int _currentPage = 1;
@@ -132,6 +146,33 @@ namespace ProfiSysTask.UI.ViewModels
 
         }
 
+        [RelayCommand]
+        private async Task ClearDatabaseAsync() {
+            int count = await _repository.GetTotalDocumentsCountAsync(string.Empty, "Wszystko");
+            if (count == 0) {
+                await ShowConfirmDialogAsync("Informacja", "Baza danych jest już pusta. Nie ma nic do usunięcia.", true);
+                return;
+            }
+
+            bool confirmed = await ShowConfirmDialogAsync(
+                "Ostrzeżenie - Czyszczenie bazy",
+                "Czy na pewno chcesz bezpowrotnie usunąć wszystkie dokumenty i pozycje z bazy danych?\n\nTej operacji nie można cofnąć!",
+                false);
+
+            if (confirmed) {
+                try {
+                    await _repository.ClearDatabaseAsync();
+                    CurrentPage = 1;
+                    SearchText = string.Empty;
+                    SelectedDocument = null;
+                    await LoadDataAsync();
+                }
+                catch (Exception ex) {
+                    MessageBox.Show($"Wystąpił błąd: {ex.Message}", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
         partial void OnSelectedDocumentChanged(Document? value) {
             if (value != null && value.Items != null) {
                 ItemsView = CollectionViewSource.GetDefaultView(value.Items);
@@ -162,6 +203,28 @@ namespace ProfiSysTask.UI.ViewModels
                            item.Price.ToString().Contains(search) ||
                            item.TaxRate.ToString().Contains(search);
             }
+        }
+
+        private Task<bool> ShowConfirmDialogAsync(string title, string message, bool isInfoOnly = false) {
+            ConfirmDialogTitle = title;
+            ConfirmDialogMessage = message;
+            IsInfoOnlyMode = isInfoOnly;
+            IsConfirmDialogOpen = true;
+
+            _dialogTaskCompletionSource = new TaskCompletionSource<bool>();
+            return _dialogTaskCompletionSource.Task;
+        }
+
+        [RelayCommand]
+        private void ConfirmDialogYes() {
+            IsConfirmDialogOpen = false;
+            _dialogTaskCompletionSource?.TrySetResult(true);
+        }
+
+        [RelayCommand]
+        private void ConfirmDialogNo() {
+            IsConfirmDialogOpen = false;
+            _dialogTaskCompletionSource?.TrySetResult(false);
         }
     }
 }
