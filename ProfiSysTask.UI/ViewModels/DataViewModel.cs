@@ -25,11 +25,17 @@ namespace ProfiSysTask.UI.ViewModels
         [ObservableProperty]
         private Document? _selectedDocument;
 
+        [ObservableProperty]
+        private DocumentItem? _selectedItem;
+
         public Action? GoBackRequested { get; set; }
 
 
         public List<string> FilterColumns { get; } = new List<string> { "Wszystko", "Typ", "Imię", "Nazwisko", "Miasto"};
         public List<string> ItemFilterColumns { get; } = new List<string> { "Wszystko", "Produkt", "Cena", "VAT" };
+        public List<string> DocumentTypes { get; } = new List<string> { "Invoice", "Order", "Receipt" };
+        public List<string> ProductsList { get; } = new List<string> { "Graphics Card", "Hard drive", "Headphones", "Keyboard", "Monitor", "Mouse", "Printer", "Processor", "RAM" };
+        public List<int> VatRatesList { get; } = new List<int> { 8, 23 };
 
         [ObservableProperty]
         private string _searchText = string.Empty;
@@ -54,7 +60,35 @@ namespace ProfiSysTask.UI.ViewModels
         [ObservableProperty]
         private bool _isInfoOnlyMode;
 
+        [ObservableProperty]
+        private bool _isErrorMode;
+
         private TaskCompletionSource<bool>? _dialogTaskCompletionSource;
+
+        [ObservableProperty]
+        private bool _isDocumentFormOpen;
+
+        [ObservableProperty]
+        private string _documentFormTitle = string.Empty;
+
+        [ObservableProperty]
+        private Document _editingDocument = new();
+
+        private bool _isEditMode;
+
+        [ObservableProperty]
+        private bool _isItemFormOpen;
+
+        [ObservableProperty]
+        private string _itemFormTitle = string.Empty;
+
+        [ObservableProperty]
+        private DocumentItem _editingItem = new();
+
+        private bool _isEditItemMode;
+
+        [ObservableProperty]
+        private string _editingItemPriceText = string.Empty;
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(PreviousPageCommand))]
@@ -168,18 +202,27 @@ namespace ProfiSysTask.UI.ViewModels
         [RelayCommand]
         public async Task LoadDataAsync() {
             try {
+                int? savedDocumentId = SelectedDocument?.Id;
+
                 int totalItems = await _repository.GetTotalDocumentsCountAsync(SearchText, SelectedFilterColumn);
                 TotalPages = (int)Math.Ceiling((double)totalItems / _pageSize);
                 if (TotalPages == 0) TotalPages = 1;
 
+                if (CurrentPage > TotalPages) {
+                    CurrentPage = TotalPages;
+                }
+
                 var pagedData = await _repository.GetPagedDocumentsAsync(CurrentPage, _pageSize, SearchText, SelectedFilterColumn);
 
                 Documents = new ObservableCollection<Document>(pagedData);
+
+                if (savedDocumentId.HasValue) {
+                    SelectedDocument = Documents.FirstOrDefault(d => d.Id == savedDocumentId.Value);
+                }
             }
             catch (Exception ex) {
                 MessageBox.Show($"Błąd podczas ładowania danych: {ex.Message}", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-
         }
 
         [RelayCommand]
@@ -243,6 +286,214 @@ namespace ProfiSysTask.UI.ViewModels
             }
         }
 
+        [RelayCommand]
+        private void AddDocument() {
+            EditingDocument = new Document {
+                Type = DocumentTypes.FirstOrDefault() ?? "Invoice",
+                Date = DateTime.Now,
+                FirstName = string.Empty,
+                LastName = string.Empty,
+                City = string.Empty
+            };
+
+            DocumentFormTitle = "Dodaj nowy dokument";
+            _isEditMode = false;
+            IsDocumentFormOpen = true;
+        }
+
+        [RelayCommand]
+        private void EditDocument(Document doc) {
+            if (doc == null) return;
+
+            EditingDocument = new Document {
+                Id = doc.Id,
+                Type = doc.Type,
+                Date = doc.Date,
+                FirstName = doc.FirstName,
+                LastName = doc.LastName,
+                City = doc.City,
+                Items = doc.Items
+            };
+
+            DocumentFormTitle = $"Edytuj dokument #{doc.Id}";
+            _isEditMode = true;
+            IsDocumentFormOpen = true;
+        }
+
+        [RelayCommand]
+        private void CancelDocumentForm() {
+            IsDocumentFormOpen = false;
+        }
+
+        [RelayCommand]
+        private async Task SaveDocumentAsync() {
+
+            if (string.IsNullOrWhiteSpace(EditingDocument.Type) ||
+                            string.IsNullOrWhiteSpace(EditingDocument.FirstName) ||
+                            string.IsNullOrWhiteSpace(EditingDocument.LastName) ||
+                            string.IsNullOrWhiteSpace(EditingDocument.City)) {
+                await ShowErrorDialogAsync("Brakujące dane", "Wszystkie pola formularza są wymagane! Uzupełnij brakujące dane przed zapisem.");
+                return;
+            }
+
+            try {
+                if (_isEditMode) {
+                    await _repository.UpdateDocumentAsync(EditingDocument);
+                }
+                else {
+                    await _repository.AddDocumentAsync(EditingDocument);
+
+                    CurrentPage = int.MaxValue;
+                }
+
+                IsDocumentFormOpen = false;
+                await LoadDataAsync();
+            }
+            catch (Exception ex) {
+                MessageBox.Show($"Błąd zapisu: {ex.Message}", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        [RelayCommand]
+        private async Task DeleteDocumentAsync(Document doc) {
+            if (doc == null) return;
+
+            bool confirmed = await ShowConfirmDialogAsync(
+                "Usuwanie dokumentu",
+                $"Czy na pewno chcesz usunąć dokument #{doc.Id} wystawiony dla {doc.FirstName} {doc.LastName}?\n\nWszystkie jego pozycje również zostaną usunięte. Tej operacji nie można cofnąć.");
+
+            if (confirmed) {
+                try {
+                    await _repository.DeleteDocumentAsync(doc);
+
+                    if (SelectedDocument?.Id == doc.Id) {
+                        SelectedDocument = null;
+                    }
+
+                    await LoadDataAsync();
+                }
+                catch (Exception ex) {
+                    MessageBox.Show($"Błąd podczas usuwania: {ex.Message}", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        [RelayCommand]
+        private async Task DeleteItemAsync(DocumentItem item) {
+            if (item == null) return;
+
+            bool confirmed = await ShowConfirmDialogAsync(
+                "Usuwanie pozycji",
+                $"Czy na pewno chcesz usunąć pozycję: '{item.Product}'?");
+
+            if (confirmed) {
+                try {
+                    await _repository.DeleteItemAsync(item);
+                    await LoadDataAsync();
+                }
+                catch (Exception ex) {
+                    MessageBox.Show($"Błąd podczas usuwania pozycji: {ex.Message}", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        [RelayCommand]
+        private void AddItem() {
+            if (SelectedDocument == null) return;
+
+            EditingItem = new DocumentItem {
+                DocumentId = SelectedDocument.Id,
+                Product = ProductsList.FirstOrDefault() ?? "Graphics Card",
+                Quantity = 1,
+                Price = 0,
+                TaxRate = 8
+            };
+
+            ItemFormTitle = "Dodaj nową pozycję";
+            _isEditItemMode = false;
+
+            EditingItemPriceText = string.Empty;
+
+            OnPropertyChanged(nameof(IsVat8));
+            OnPropertyChanged(nameof(IsVat23));
+
+            IsItemFormOpen = true;
+        }
+
+        [RelayCommand]
+        private void EditItem(DocumentItem item) {
+            if (item == null) return;
+
+            EditingItem = new DocumentItem {
+                Id = item.Id,
+                Ordinal = item.Ordinal,
+                DocumentId = item.DocumentId,
+                Product = item.Product,
+                Quantity = item.Quantity,
+                Price = item.Price,
+                TaxRate = item.TaxRate
+            };
+
+            EditingItemPriceText = item.Price.ToString("N2");
+
+            ItemFormTitle = "Edytuj pozycję";
+            _isEditItemMode = true;
+
+            OnPropertyChanged(nameof(IsVat8));
+            OnPropertyChanged(nameof(IsVat23));
+
+            IsItemFormOpen = true;
+        }
+
+        [RelayCommand]
+        private void CancelItemForm() => IsItemFormOpen = false;
+
+        [RelayCommand]
+        private async Task SaveItemAsync() {
+            if (string.IsNullOrWhiteSpace(EditingItem.Product) || EditingItem.Quantity <= 0) {
+                await ShowErrorDialogAsync("Brakujące dane", "Nazwa produktu i ilość (większa od zera) są wymagane!");
+                return;
+            }
+
+            string normalizedPrice = EditingItemPriceText.Replace(".", ",");
+
+            if (!decimal.TryParse(normalizedPrice, out decimal parsedPrice) || parsedPrice < 0) {
+                await ShowErrorDialogAsync("Błędna cena", "Wprowadzona cena jest nieprawidłowa. Użyj formatu liczbowego (np. 15,50). Upewnij się, że nie ma tam liter.");
+                return;
+            }
+
+            EditingItem.Price = parsedPrice;
+
+            try {
+                if (_isEditItemMode) {
+                    await _repository.UpdateItemAsync(EditingItem);
+                }
+                else {
+                    await _repository.AddItemAsync(EditingItem);
+                }
+
+                IsItemFormOpen = false;
+                await LoadDataAsync();
+            }
+            catch (Exception ex) {
+                MessageBox.Show($"Błąd zapisu pozycji: {ex.Message}", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        [RelayCommand]
+        private void IncreaseQuantity() {
+            EditingItem.Quantity++;
+            OnPropertyChanged(nameof(EditingItem));
+        }
+
+        [RelayCommand]
+        private void DecreaseQuantity() {
+            if (EditingItem.Quantity > 1) {
+                EditingItem.Quantity--;
+                OnPropertyChanged(nameof(EditingItem));
+            }
+        }
+
         partial void OnSelectedDocumentChanged(Document? value) {
             if (value != null && value.Items != null) {
                 ItemsView = CollectionViewSource.GetDefaultView(value.Items);
@@ -285,6 +536,18 @@ namespace ProfiSysTask.UI.ViewModels
             ConfirmDialogTitle = title;
             ConfirmDialogMessage = message;
             IsInfoOnlyMode = isInfoOnly;
+            IsErrorMode = false;
+            IsConfirmDialogOpen = true;
+
+            _dialogTaskCompletionSource = new TaskCompletionSource<bool>();
+            return _dialogTaskCompletionSource.Task;
+        }
+
+        private Task ShowErrorDialogAsync(string title, string message) {
+            ConfirmDialogTitle = title;
+            ConfirmDialogMessage = message;
+            IsInfoOnlyMode = false;
+            IsErrorMode = true;
             IsConfirmDialogOpen = true;
 
             _dialogTaskCompletionSource = new TaskCompletionSource<bool>();
@@ -301,6 +564,28 @@ namespace ProfiSysTask.UI.ViewModels
         private void ConfirmDialogNo() {
             IsConfirmDialogOpen = false;
             _dialogTaskCompletionSource?.TrySetResult(false);
+        }
+
+        public bool IsVat8 {
+            get => EditingItem.TaxRate == 8;
+            set {
+                if (value) {
+                    EditingItem.TaxRate = 8;
+                    OnPropertyChanged(nameof(IsVat8));
+                    OnPropertyChanged(nameof(IsVat23));
+                }
+            }
+        }
+
+        public bool IsVat23 {
+            get => EditingItem.TaxRate == 23;
+            set {
+                if (value) {
+                    EditingItem.TaxRate = 23;
+                    OnPropertyChanged(nameof(IsVat8));
+                    OnPropertyChanged(nameof(IsVat23));
+                }
+            }
         }
     }
 }

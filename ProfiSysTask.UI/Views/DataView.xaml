@@ -70,6 +70,34 @@
             </Setter>
         </Style>
 
+        <Style x:Key="GridActionButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="28"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Margin" Value="4,0"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <Border x:Name="BgBorder" Background="{TemplateBinding Background}" CornerRadius="6"/>
+                            <Border x:Name="Overlay" Background="Black" CornerRadius="6" Opacity="0"/>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Overlay" Property="Opacity" Value="0.15"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Overlay" Property="Opacity" Value="0.3"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
         <Style x:Key="RoundActionButtonStyle" TargetType="Button">
             <Setter Property="Width" Value="35"/>
             <Setter Property="Height" Value="35"/>
@@ -385,90 +413,94 @@
             </Button>
         </Grid>
 
-        <Grid Grid.Column="1" Margin="10,5,5,10">
+        <Grid Grid.Column="1" Margin="15,10,15,10">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="1.8*"/>
-                <RowDefinition Height="2.5"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="15"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <TextBlock Grid.Row="0" Text="Dokumenty" FontSize="14" Margin="0,0,0,5"/>
-            <Grid Grid.Row="1">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
+            <Grid Grid.Row="0" Margin="0,0,0,10">
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <DataGrid Grid.Row="0" Grid.Column="0" ItemsSource="{Binding Documents}" SelectedItem="{Binding SelectedDocument}" 
-                          AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single"
-                          Style="{StaticResource ModernDataGridStyle}">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="Auto" MinWidth="40"/>
-                        <DataGridTextColumn Header="Typ" Binding="{Binding Type}" Width="*"/>
-                        <DataGridTextColumn Header="Data" Binding="{Binding Date, StringFormat=\{0:yyyy-MM-dd\}}" Width="*"/>
-                        <DataGridTextColumn Header="Imię" Binding="{Binding FirstName}" Width="*"/>
-                        <DataGridTextColumn Header="Nazwisko" Binding="{Binding LastName}" Width="*"/>
-                        <DataGridTextColumn Header="Miasto" Binding="{Binding City}" Width="*"/>
-                    </DataGrid.Columns>
-                </DataGrid>
+                <TextBlock Grid.Column="0" Text="Dokumenty" FontSize="18" FontWeight="SemiBold" Foreground="#333333" VerticalAlignment="Center"/>
 
-                <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
-                    <Button Background="#007CC3" Style="{StaticResource RoundActionButtonStyle}" Command="{Binding PreviousPageCommand}" Width="28" Height="28" Margin="0,0,10,0">
-                        <iconPacks:PackIconMaterial Kind="ChevronLeft" Width="16" Height="14" Padding="0,0,2,0"/>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Command="{Binding AddDocumentCommand}" Style="{StaticResource PillButtonStyle}" Background="#008A00" Width="150" Margin="0,0,15,0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <iconPacks:PackIconMaterial Kind="Plus" Width="12" Height="12" Margin="0,1,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Dodaj dokument" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                        </StackPanel>
                     </Button>
 
-                    <TextBlock Text="Strona " VerticalAlignment="Center" Foreground="#333333" FontSize="12"/>
-                    <TextBlock Text="{Binding CurrentPage}" VerticalAlignment="Center" FontWeight="Bold" Foreground="#007CC3" FontSize="12"/>
-                    <TextBlock Text=" z " VerticalAlignment="Center" Foreground="#333333" FontSize="12"/>
-                    <TextBlock Text="{Binding TotalPages}" VerticalAlignment="Center" FontWeight="Bold" Foreground="#333333" FontSize="12" Margin="0,0,10,0"/>
+                    <ComboBox Width="130" Margin="0,0,10,0" 
+                              Style="{StaticResource PillComboBoxStyle}"
+                              ItemsSource="{Binding FilterColumns}"
+                              SelectedItem="{Binding SelectedFilterColumn, UpdateSourceTrigger=PropertyChanged}"/>
 
-                    <Button Background="#007CC3" Style="{StaticResource RoundActionButtonStyle}" Command="{Binding NextPageCommand}" Width="28" Height="28">
-                        <iconPacks:PackIconMaterial Kind="ChevronRight" Width="16" Height="14" Padding="2,0,0,0"/>
-                    </Button>
-                </StackPanel>
-
-                <StackPanel Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Margin="10,0,0,0">
-                    <StackPanel Orientation="Horizontal">
-                        <Button Background="#008A00" Margin="0,5,10,5" Style="{StaticResource RoundActionButtonStyle}" Command="{Binding AddDocumentCommand}" ToolTip="Dodaj nowy">
-                            <iconPacks:PackIconMaterial Kind="Plus" Width="14" Height="14"/>
-                        </Button>
-
-                        <ComboBox Width="120" Margin="0,0,0,5" 
-                                  Style="{StaticResource PillComboBoxStyle}"
-                                  ItemsSource="{Binding FilterColumns}"
-                                  SelectedItem="{Binding SelectedFilterColumn, UpdateSourceTrigger=PropertyChanged}">
-                        </ComboBox>
-                    </StackPanel>
-
-                    <StackPanel Orientation="Horizontal">
-                        <Button Background="#996600" Margin="0,5,10,5" Style="{StaticResource RoundActionButtonStyle}" Command="{Binding EditDocumentCommand}" ToolTip="Edytuj wybrany">
-                            <iconPacks:PackIconMaterial Kind="Pencil" Width="14" Height="14"/>
-                        </Button>
-
-                        <TextBox Width="120" Margin="0,0,0,0" 
-                                 Style="{StaticResource PillTextBoxStyle}"
-                                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
-                                 Tag="Szukaj..."/>
-                    </StackPanel>
-
-                    <StackPanel Orientation="Horizontal">
-                        <Button Background="#990000" Margin="0,5,10,5" Style="{StaticResource RoundActionButtonStyle}" Command="{Binding DeleteDocumentCommand}" ToolTip="Usuń wybrany">
-                            <iconPacks:PackIconMaterial Kind="Delete" Width="14" Height="14"/>
-                        </Button>
-                    </StackPanel>
+                    <TextBox Width="180" Margin="0,0,0,0" 
+                             Style="{StaticResource PillTextBoxStyle}"
+                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
+                             Tag="Szukaj dokumentu..."/>
                 </StackPanel>
             </Grid>
 
-            <TextBlock Grid.Row="3" Text="Elementy dokumentu" FontSize="14" Margin="0,0,0,5"/>
+            <DataGrid Grid.Row="1" ItemsSource="{Binding Documents}" SelectedItem="{Binding SelectedDocument}" 
+                      AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single"
+                      Style="{StaticResource ModernDataGridStyle}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="Auto" MinWidth="40"/>
+                    <DataGridTextColumn Header="Typ" Binding="{Binding Type}" Width="*"/>
+                    <DataGridTextColumn Header="Data" Binding="{Binding Date, StringFormat=\{0:yyyy-MM-dd\}}" Width="*"/>
 
-            <Grid Grid.Row="4">
+                    <DataGridTextColumn Header="Imię" Binding="{Binding FirstName}" Width="*"/>
+                    <DataGridTextColumn Header="Nazwisko" Binding="{Binding LastName}" Width="*"/>
+
+                    <DataGridTextColumn Header="Miasto" Binding="{Binding City}" Width="*"/>
+
+                    <DataGridTemplateColumn Header="Akcje" Width="100">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <Button Background="#5C42D0 " Style="{StaticResource GridActionButtonStyle}" 
+                                            Command="{Binding DataContext.EditDocumentCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}" ToolTip="Edytuj">
+                                        <iconPacks:PackIconMaterial Kind="Pencil" Width="14" Height="14"/>
+                                    </Button>
+
+                                    <Button Background="#D14545" Style="{StaticResource GridActionButtonStyle}" 
+                                            Command="{Binding DataContext.DeleteDocumentCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}" ToolTip="Usuń">
+                                        <iconPacks:PackIconMaterial Kind="Delete" Width="14" Height="14"/>
+                                    </Button>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15,0,0">
+                <Button Background="#007CC3" Style="{StaticResource RoundActionButtonStyle}" Command="{Binding PreviousPageCommand}" Width="28" Height="28" Margin="0,0,10,0">
+                    <iconPacks:PackIconMaterial Kind="ChevronLeft" Width="14" Height="14"/>
+                </Button>
+                <TextBlock Text="Strona " VerticalAlignment="Center" Foreground="#333333" FontSize="12"/>
+                <TextBlock Text="{Binding CurrentPage}" VerticalAlignment="Center" FontWeight="Bold" Foreground="#007CC3" FontSize="12"/>
+                <TextBlock Text=" z " VerticalAlignment="Center" Foreground="#333333" FontSize="12"/>
+                <TextBlock Text="{Binding TotalPages}" VerticalAlignment="Center" FontWeight="Bold" Foreground="#333333" FontSize="12" Margin="0,0,10,0"/>
+                <Button Background="#007CC3" Style="{StaticResource RoundActionButtonStyle}" Command="{Binding NextPageCommand}" Width="28" Height="28">
+                    <iconPacks:PackIconMaterial Kind="ChevronRight" Width="14" Height="14"/>
+                </Button>
+            </StackPanel>
+
+            <Grid Grid.Row="4" Margin="0,0,0,10">
                 <Grid.Style>
                     <Style TargetType="Grid">
                         <Style.Triggers>
@@ -481,55 +513,228 @@
                 </Grid.Style>
 
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <DataGrid Grid.Column="0" ItemsSource="{Binding ItemsView}" 
-                          SelectedItem="{Binding SelectedItem}"
-                          AutoGenerateColumns="False" IsReadOnly="True"
-                          Style="{StaticResource ModernDataGridStyle}">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Lp." Binding="{Binding Ordinal}" Width="Auto" MinWidth="40"/>
-                        <DataGridTextColumn Header="Produkt" Binding="{Binding Product}" Width="2*"/>
-                        <DataGridTextColumn Header="Ilość" Binding="{Binding Quantity}" Width="*"/>
-                        <DataGridTextColumn Header="Cena" Binding="{Binding Price, StringFormat=\{0:C\}}" Width="*"/>
-                        <DataGridTextColumn Header="VAT (%)" Binding="{Binding TaxRate}" Width="*"/>
-                    </DataGrid.Columns>
-                </DataGrid>
+                <TextBlock Grid.Column="0" Text="Elementy dokumentu" FontSize="18" FontWeight="SemiBold" Foreground="#333333" VerticalAlignment="Center"/>
 
-                <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                    <StackPanel Orientation="Horizontal">
-                        <Button Background="#008A00" Margin="0,5,10,5" Style="{StaticResource RoundActionButtonStyle}" Command="{Binding AddItemCommand}" ToolTip="Dodaj nową pozycję">
-                            <iconPacks:PackIconMaterial Kind="Plus" Width="14" Height="14"/>
-                        </Button>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Command="{Binding AddItemCommand}" Style="{StaticResource PillButtonStyle}" Background="#008A00" Width="140" Margin="0,0,15,0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <iconPacks:PackIconMaterial Kind="Plus" Width="12" Height="12" Margin="0,1,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Dodaj pozycję" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Button>
+                    
+                    <ComboBox Width="130" Margin="0,0,10,0" 
+                              Style="{StaticResource PillComboBoxStyle}"
+                              ItemsSource="{Binding ItemFilterColumns}"
+                              SelectedItem="{Binding SelectedItemFilterColumn, UpdateSourceTrigger=PropertyChanged}"/>
 
-                        <ComboBox Width="120" Margin="0,0,0,5" 
-                                  Style="{StaticResource PillComboBoxStyle}"
-                                  ItemsSource="{Binding ItemFilterColumns}"
-                                  SelectedItem="{Binding SelectedItemFilterColumn, UpdateSourceTrigger=PropertyChanged}">
-                        </ComboBox>
+                    <TextBox Width="180" Margin="0,0,0,0" 
+                             Style="{StaticResource PillTextBoxStyle}"
+                             Text="{Binding ItemSearchText, UpdateSourceTrigger=PropertyChanged}" 
+                             Tag="Szukaj elementu..."/>
+                </StackPanel>
+            </Grid>
+
+            <DataGrid Grid.Row="5" ItemsSource="{Binding ItemsView}" SelectedItem="{Binding SelectedItem}"
+                      AutoGenerateColumns="False" IsReadOnly="True">
+                <DataGrid.Style>
+                    <Style TargetType="DataGrid" BasedOn="{StaticResource ModernDataGridStyle}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedDocument}" Value="{x:Null}">
+                                <Setter Property="IsEnabled" Value="False"/>
+                                <Setter Property="Opacity" Value="0.4"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </DataGrid.Style>
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Lp." Binding="{Binding Ordinal}" Width="Auto" MinWidth="40"/>
+                    <DataGridTextColumn Header="Produkt" Binding="{Binding Product}" Width="2*"/>
+                    <DataGridTextColumn Header="Ilość" Binding="{Binding Quantity}" Width="*"/>
+                    <DataGridTextColumn Header="Cena" Binding="{Binding Price, StringFormat=\{0:C\}}" Width="*"/>
+                    <DataGridTextColumn Header="VAT" Binding="{Binding TaxRate, StringFormat=\{0:0\}%}" Width="*"/>
+
+                    <DataGridTemplateColumn Header="Akcje" Width="100">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <Button Background="#5C42D0" Style="{StaticResource GridActionButtonStyle}" 
+                                            Command="{Binding DataContext.EditItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}" ToolTip="Edytuj">
+                                        <iconPacks:PackIconMaterial Kind="Pencil" Width="14" Height="14"/>
+                                    </Button>
+                                    <Button Background="#D14545" Style="{StaticResource GridActionButtonStyle}" 
+                                            Command="{Binding DataContext.DeleteItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}" ToolTip="Usuń">
+                                        <iconPacks:PackIconMaterial Kind="Delete" Width="14" Height="14"/>
+                                    </Button>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+
+        <Grid Grid.ColumnSpan="2" 
+              Background="#B2000000" 
+              Visibility="{Binding IsDocumentFormOpen, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}" 
+              Panel.ZIndex="998">
+            <Border Background="White" CornerRadius="12" VerticalAlignment="Center" HorizontalAlignment="Center" Width="400" Padding="25">
+                <Border.Effect>
+                    <DropShadowEffect ShadowDepth="4" BlurRadius="20" Opacity="0.3"/>
+                </Border.Effect>
+
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                        <iconPacks:PackIconMaterial Kind="FileDocumentEdit" Foreground="#007CC3" Width="24" Height="24" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding DocumentFormTitle}" FontSize="18" FontWeight="Bold" Foreground="#333333" Margin="10,0,0,0" VerticalAlignment="Center"/>
                     </StackPanel>
 
-                    <StackPanel Orientation="Horizontal">
-                        <Button Background="#996600" Margin="0,5,10,5" Style="{StaticResource RoundActionButtonStyle}" Command="{Binding EditItemCommand}" ToolTip="Edytuj wybraną pozycję">
-                            <iconPacks:PackIconMaterial Kind="Pencil" Width="14" Height="14"/>
-                        </Button>
+                    <TextBlock Text="Typ dokumentu *" FontWeight="SemiBold" Foreground="#555555" Margin="0,0,0,5"/>
+                    <ComboBox ItemsSource="{Binding DocumentTypes}" SelectedItem="{Binding EditingDocument.Type}" Height="35" Padding="10,0" Margin="0,0,0,15" Cursor="Hand" VerticalContentAlignment="Center" BorderBrush="#CCCCCC"/>
 
-                        <TextBox Width="120" Margin="0,0,0,0" 
-                                 Style="{StaticResource PillTextBoxStyle}"
-                                 Text="{Binding ItemSearchText, UpdateSourceTrigger=PropertyChanged}" 
-                                 Tag="Szukaj..."/>
-                    </StackPanel>
+                    <TextBlock Text="Data *" FontWeight="SemiBold" Foreground="#555555" Margin="0,0,0,5"/>
+                    <DatePicker SelectedDate="{Binding EditingDocument.Date}" Height="35" Margin="0,0,0,15" Cursor="Hand" VerticalContentAlignment="Center" BorderBrush="#CCCCCC">
+                        <DatePicker.Resources>
+                            <Style TargetType="DatePickerTextBox">
+                                <Setter Property="IsReadOnly" Value="True"/>
+                            </Style>
+                        </DatePicker.Resources>
+                    </DatePicker>
 
-                    <StackPanel Orientation="Horizontal">
-                        <Button Background="#990000" Margin="0,5,10,5" Style="{StaticResource RoundActionButtonStyle}" Command="{Binding DeleteItemCommand}" ToolTip="Usuń wybraną pozycję">
-                            <iconPacks:PackIconMaterial Kind="Delete" Width="14" Height="14"/>
+                    <Grid Margin="0,0,0,15">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Imię *" FontWeight="SemiBold" Foreground="#555555" Margin="0,0,0,5"/>
+                            <TextBox Text="{Binding EditingDocument.FirstName}" Height="35" Padding="10,0" VerticalContentAlignment="Center" BorderBrush="#CCCCCC"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Nazwisko *" FontWeight="SemiBold" Foreground="#555555" Margin="0,0,0,5"/>
+                            <TextBox Text="{Binding EditingDocument.LastName}" Height="35" Padding="10,0" VerticalContentAlignment="Center" BorderBrush="#CCCCCC"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock Text="Miasto *" FontWeight="SemiBold" Foreground="#555555" Margin="0,0,0,5"/>
+                    <TextBox Text="{Binding EditingDocument.City}" Height="35" Padding="10,0" Margin="0,0,0,25" VerticalContentAlignment="Center" BorderBrush="#CCCCCC"/>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Anuluj" Command="{Binding CancelDocumentFormCommand}" Style="{StaticResource PillButtonStyle}" Background="#666666" Width="100"/>
+                        <Button Content="Zapisz" Command="{Binding SaveDocumentCommand}" Style="{StaticResource PillButtonStyle}" Background="#008A00" Width="120" Margin="15,0,0,0">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Grid>
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="15"/>
+                                        <Border x:Name="Overlay" Background="Black" CornerRadius="15" Opacity="0"/>
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Overlay" Property="Opacity" Value="0.15"/>
+                                        </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter TargetName="Overlay" Property="Opacity" Value="0.3"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
                         </Button>
                     </StackPanel>
                 </StackPanel>
-            </Grid>
+            </Border>
         </Grid>
+
+        <Grid Grid.ColumnSpan="2" 
+              Background="#B2000000" 
+              Visibility="{Binding IsItemFormOpen, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}" 
+              Panel.ZIndex="998">
+
+            <Border Background="White" CornerRadius="12" VerticalAlignment="Center" HorizontalAlignment="Center" Width="380" Padding="25">
+                <Border.Effect>
+                    <DropShadowEffect ShadowDepth="4" BlurRadius="20" Opacity="0.3"/>
+                </Border.Effect>
+
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                        <iconPacks:PackIconMaterial Kind="PackageVariant" Foreground="#007CC3" Width="24" Height="24" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding ItemFormTitle}" FontSize="18" FontWeight="Bold" Foreground="#333333" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <TextBlock Text="Nazwa produktu *" FontWeight="SemiBold" Foreground="#555555" Margin="0,0,0,5"/>
+                    <ComboBox ItemsSource="{Binding ProductsList}" SelectedItem="{Binding EditingItem.Product}" Height="35" Padding="10,0" Margin="0,0,0,15" Cursor="Hand" VerticalContentAlignment="Center" BorderBrush="#CCCCCC"/>
+
+                    <Grid Margin="0,0,0,15">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="15"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Ilość *" FontWeight="SemiBold" Foreground="#555555" Margin="0,0,0,5"/>
+                            <Border BorderBrush="#CCCCCC" BorderThickness="1" CornerRadius="4" Height="35">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="35"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="35"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Button Grid.Column="0" Command="{Binding DecreaseQuantityCommand}" Content="-" Background="#F0F0F0" Foreground="#333333" BorderThickness="0" FontSize="18" FontWeight="Bold" Cursor="Hand"/>
+
+                                    <TextBox Grid.Column="1" Text="{Binding EditingItem.Quantity, UpdateSourceTrigger=PropertyChanged}" TextAlignment="Center" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent"/>
+
+                                    <Button Grid.Column="2" Command="{Binding IncreaseQuantityCommand}" Content="+" Background="#F0F0F0" Foreground="#333333" BorderThickness="0" FontSize="16" FontWeight="Bold" Cursor="Hand"/>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Cena jedn. (Netto) *" FontWeight="SemiBold" Foreground="#555555" Margin="0,0,0,5"/>
+                            <TextBox Text="{Binding EditingItemPriceText, UpdateSourceTrigger=PropertyChanged}" 
+                                     InputScope="Number" Tag="0.00"
+                                     TextAlignment="Right" Height="35" Padding="10,0" VerticalContentAlignment="Center" BorderBrush="#CCCCCC"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <StackPanel HorizontalAlignment="Center" Margin="0,0,0,25">
+                        <TextBlock Text="Stawka VAT (%) *" FontWeight="SemiBold" Foreground="#555555" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+
+                        <Border BorderBrush="#CCCCCC" BorderThickness="1" CornerRadius="6" Height="35" Padding="20,0" Background="#F9F9F9">
+
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <RadioButton Content="8%" FontSize="14" FontWeight="SemiBold" Foreground="#333333" 
+                                             Margin="0,0,30,0" VerticalContentAlignment="Center" Cursor="Hand"
+                                             IsChecked="{Binding IsVat8}"/>
+
+                                <RadioButton Content="23%" FontSize="14" FontWeight="SemiBold" Foreground="#333333" 
+                                             VerticalContentAlignment="Center" Cursor="Hand"
+                                             IsChecked="{Binding IsVat23}"/>
+                            </StackPanel>
+
+                        </Border>
+                    </StackPanel>
+
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Anuluj" Command="{Binding CancelItemFormCommand}" Style="{StaticResource PillButtonStyle}" Background="#666666" Width="90"/>
+                        <Button Content="Zapisz pozycję" Command="{Binding SaveItemCommand}" Style="{StaticResource PillButtonStyle}" Background="#008A00" Width="130" Margin="15,0,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+
         <Grid Grid.ColumnSpan="2" 
               Background="#B2000000" 
               Visibility="{Binding IsConfirmDialogOpen, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}" 
@@ -552,6 +757,10 @@
                                             <Setter Property="Kind" Value="InformationOutline"/>
                                             <Setter Property="Foreground" Value="#007CC3"/>
                                         </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsErrorMode}" Value="True">
+                                            <Setter Property="Kind" Value="AlertOctagonOutline"/>
+                                            <Setter Property="Foreground" Value="#E67E22"/>
+                                        </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
                             </iconPacks:PackIconMaterial.Style>
@@ -573,6 +782,9 @@
                                         <DataTrigger Binding="{Binding IsInfoOnlyMode}" Value="True">
                                             <Setter Property="Visibility" Value="Collapsed"/>
                                         </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsErrorMode}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
                             </Button.Style>
@@ -587,6 +799,10 @@
                                         <DataTrigger Binding="{Binding IsInfoOnlyMode}" Value="True">
                                             <Setter Property="Content" Value="Rozumiem"/>
                                             <Setter Property="Background" Value="#007CC3"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsErrorMode}" Value="True">
+                                            <Setter Property="Content" Value="Ok"/>
+                                            <Setter Property="Background" Value="#E67E22"/>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>

@@ -5,13 +5,21 @@ namespace ProfiSysTask.Core.Interfaces {
 
         Task<IEnumerable<Document>> GetAllDocumentsAsync();
 
+        Task<int> GetTotalDocumentsCountAsync(string searchText, string searchColumn);
+
+        Task<IEnumerable<Document>> GetPagedDocumentsAsync(int pageNumber, int pageSize, string searchText, string searchColumn);
+
         Task SaveDocumentsAsync(IEnumerable<Document> documents);
 
         Task ClearDatabaseAsync();
 
-        Task<int> GetTotalDocumentsCountAsync(string searchText, string searchColumn);
+        Task AddDocumentAsync(Document document);
+        Task UpdateDocumentAsync(Document document);
+        Task DeleteDocumentAsync(Document document);
 
-        Task<IEnumerable<Document>> GetPagedDocumentsAsync(int pageNumber, int pageSize, string searchText, string searchColumn);
+        Task AddItemAsync(DocumentItem item);
+        Task UpdateItemAsync(DocumentItem item);
+        Task DeleteItemAsync(DocumentItem item);
 
     }
 }
