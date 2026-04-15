@@ -64,7 +64,7 @@ A modern desktop application built with **.NET 10** and **WPF** for managing fin
 ### Installation & Run
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/OfioNN/ProfiSysTask.git](https://github.com/OfioNN/ProfiSysTask.git)
+    git clone https://github.com/OfioNN/ProfiSysTask.git
     ```
 2.  **Open the solution:** Launch `ProfiSysTask.sln` in Visual Studio.
 3.  **Restore & Run:** Press `F5` to build and launch the application. The SQLite database will be initialized automatically in the `data/` directory.
