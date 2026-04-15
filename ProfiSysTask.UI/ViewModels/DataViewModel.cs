@@ -103,6 +103,13 @@ namespace ProfiSysTask.UI.ViewModels
         private bool _isEditItemMode;
 
         [ObservableProperty]
+        private bool _isStatisticsModalOpen;
+
+        [ObservableProperty] private decimal _statTotalRevenue;
+        [ObservableProperty] private string _statTopProduct = "";
+        [ObservableProperty] private int _statTotalItemsCount;
+
+        [ObservableProperty]
         private string _editingItemPriceText = string.Empty;
 
         [ObservableProperty]
@@ -627,6 +634,38 @@ namespace ProfiSysTask.UI.ViewModels
             IsConfirmDialogOpen = false;
             _dialogTaskCompletionSource?.TrySetResult(false);
         }
+
+        [RelayCommand]
+        private async Task ShowStatistics() {
+            IsLoading = true;
+            try {
+                var allDocs = await _repository.GetAllDocumentsAsync();
+                var allItems = allDocs.SelectMany(d => d.Items).ToList();
+
+                if (!allItems.Any()) {
+                    StatTotalRevenue = 0;
+                    StatTopProduct = "Brak danych";
+                    StatTotalItemsCount = 0;
+                }
+                else {
+                    StatTotalRevenue = allItems.Sum(i => i.Price * i.Quantity);
+
+                    StatTotalItemsCount = allItems.Sum(i => i.Quantity);
+
+                    StatTopProduct = allItems.GroupBy(i => i.Product)
+                                         .OrderByDescending(g => g.Sum(x => x.Quantity))
+                                         .First().Key;
+                }
+
+                IsStatisticsModalOpen = true;
+            }
+            finally {
+                IsLoading = false;
+            }
+        }
+
+        [RelayCommand]
+        private void CloseStatistics() => IsStatisticsModalOpen = false;
 
         public bool IsVat8 {
             get => EditingItem.TaxRate == 8;
