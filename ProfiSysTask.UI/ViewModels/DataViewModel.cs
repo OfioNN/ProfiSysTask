@@ -31,11 +31,23 @@ namespace ProfiSysTask.UI.ViewModels
         public Action? GoBackRequested { get; set; }
 
 
-        public List<string> FilterColumns { get; } = new List<string> { "Wszystko", "Typ", "Imię", "Nazwisko", "Miasto"};
+        public List<string> FilterColumns { get; } = new List<string> { "Wszystko", "Typ", "Data", "Imię", "Nazwisko", "Miasto"};
         public List<string> ItemFilterColumns { get; } = new List<string> { "Wszystko", "Produkt", "Cena", "VAT" };
         public List<string> DocumentTypes { get; } = new List<string> { "Invoice", "Order", "Receipt" };
         public List<string> ProductsList { get; } = new List<string> { "Graphics Card", "Hard drive", "Headphones", "Keyboard", "Monitor", "Mouse", "Printer", "Processor", "RAM" };
+        public List<string> VatRatesStringList { get; } = new List<string> { "8", "23" };
         public List<int> VatRatesList { get; } = new List<int> { 8, 23 };
+        public List<string> PriceOperators { get; } = new List<string> { "Od", "Do", "Równa" };
+        public List<string> DateOperators { get; } = new List<string> { "Dnia", "Powyżej", "Poniżej" };
+
+        [ObservableProperty]
+        private DateTime? _searchDate = DateTime.Now;
+
+        [ObservableProperty]
+        private string _selectedDateOperator = "Dnia";
+
+        [ObservableProperty]
+        private string _selectedPriceOperator = "Od";
 
         [ObservableProperty]
         private string _searchText = string.Empty;
@@ -105,7 +117,6 @@ namespace ProfiSysTask.UI.ViewModels
         private bool CanGoNext() => CurrentPage < TotalPages;
 
         partial void OnItemSearchTextChanged(string value) => ItemsView?.Refresh();
-        partial void OnSelectedItemFilterColumnChanged(string value) => ItemsView?.Refresh();
 
 
         public DataViewModel(IDocumentRepository repository, ICsvImporter csvImporter, ICsvExporter csvExporter, IReportGenerator reportGenerator) {
@@ -137,9 +148,39 @@ namespace ProfiSysTask.UI.ViewModels
             _ = LoadDataAsync();
         }
 
+        partial void OnSelectedDateOperatorChanged(string value) => _ = LoadDataAsync();
+
+        partial void OnSelectedPriceOperatorChanged(string value) => ItemsView?.Refresh();
+
         partial void OnSelectedFilterColumnChanged(string value) {
+            if (value == "Data") {
+                SearchDate = DateTime.Now;
+                SelectedDateOperator = "Dnia";
+            }
+            else if (value == "Typ") {
+                SearchText = DocumentTypes.FirstOrDefault() ?? string.Empty;
+            }
+            else {
+                SearchText = string.Empty;
+            }
             CurrentPage = 1;
             _ = LoadDataAsync();
+        }
+
+
+
+        partial void OnSelectedItemFilterColumnChanged(string value) {
+            if (value == "Produkt") {
+                ItemSearchText = ProductsList.FirstOrDefault() ?? string.Empty;
+            }
+            else if (value == "VAT") {
+                ItemSearchText = VatRatesStringList.FirstOrDefault() ?? string.Empty;
+            }
+            else {
+                ItemSearchText = string.Empty;
+            }
+
+            ItemsView?.Refresh();
         }
 
         [RelayCommand]
@@ -204,7 +245,7 @@ namespace ProfiSysTask.UI.ViewModels
             try {
                 int? savedDocumentId = SelectedDocument?.Id;
 
-                int totalItems = await _repository.GetTotalDocumentsCountAsync(SearchText, SelectedFilterColumn);
+                int totalItems = await _repository.GetTotalDocumentsCountAsync(SearchText, SelectedFilterColumn, SelectedDateOperator);
                 TotalPages = (int)Math.Ceiling((double)totalItems / _pageSize);
                 if (TotalPages == 0) TotalPages = 1;
 
@@ -212,8 +253,7 @@ namespace ProfiSysTask.UI.ViewModels
                     CurrentPage = TotalPages;
                 }
 
-                var pagedData = await _repository.GetPagedDocumentsAsync(CurrentPage, _pageSize, SearchText, SelectedFilterColumn);
-
+                var pagedData = await _repository.GetPagedDocumentsAsync(CurrentPage, _pageSize, SearchText, SelectedFilterColumn, SelectedDateOperator);
                 Documents = new ObservableCollection<Document>(pagedData);
 
                 if (savedDocumentId.HasValue) {
@@ -514,10 +554,20 @@ namespace ProfiSysTask.UI.ViewModels
             switch (SelectedItemFilterColumn) {
                 case "Produkt":
                     return item.Product != null && item.Product.ToLower().Contains(search);
+
                 case "Cena":
-                    return item.Price.ToString().Contains(search);
+                    string normalizedSearch = search.Replace(".", ",");
+
+                    if (decimal.TryParse(normalizedSearch, out decimal searchPrice)) {
+                        if (SelectedPriceOperator == "Od") return item.Price >= searchPrice;
+                        if (SelectedPriceOperator == "Do") return item.Price <= searchPrice;
+                        if (SelectedPriceOperator == "Równa") return item.Price == searchPrice;
+                    }
+                    return true;
+
                 case "VAT":
                     return item.TaxRate.ToString().Contains(search);
+
                 case "Wszystko":
                 default:
                     return (item.Product != null && item.Product.ToLower().Contains(search)) ||
@@ -585,6 +635,11 @@ namespace ProfiSysTask.UI.ViewModels
                     OnPropertyChanged(nameof(IsVat8));
                     OnPropertyChanged(nameof(IsVat23));
                 }
+            }
+        }
+        partial void OnSearchDateChanged(DateTime? value) {
+            if (SelectedFilterColumn == "Data") {
+                SearchText = value.HasValue ? value.Value.ToString("yyyy-MM-dd") : string.Empty;
             }
         }
     }

@@ -16,13 +16,13 @@ namespace ProfiSysTask.Infrastructure.DataAccess {
                 .Include(d => d.Items)
                 .ToListAsync();
         }
-        public async Task<int> GetTotalDocumentsCountAsync(string searchText, string searchColumn) {
-            var query = BuildFilterQuery(searchText, searchColumn);
+        public async Task<int> GetTotalDocumentsCountAsync(string searchText, string searchColumn, string dateOperator = "") {
+            var query = BuildFilterQuery(searchText, searchColumn, dateOperator);
             return await query.CountAsync();
         }
 
-        public async Task<IEnumerable<Document>> GetPagedDocumentsAsync(int pageNumber, int pageSize, string searchText, string searchColumn) {
-            var query = BuildFilterQuery(searchText, searchColumn);
+        public async Task<IEnumerable<Document>> GetPagedDocumentsAsync(int pageNumber, int pageSize, string searchText, string searchColumn, string dateOperator = "") {
+            var query = BuildFilterQuery(searchText, searchColumn, dateOperator);
 
             return await query
                 .AsNoTracking()
@@ -99,30 +99,51 @@ namespace ProfiSysTask.Infrastructure.DataAccess {
         }
 
 
-        private IQueryable<Document> BuildFilterQuery(string searchText, string searchColumn) {
+        private IQueryable<Document> BuildFilterQuery(string searchText, string searchColumn, string dateOperator = "") {
             var query = _context.Documents.AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(searchText)) {
-                switch (searchColumn) {
-                    case "Imię":
-                        query = query.Where(d => d.FirstName.Contains(searchText));
-                        break;
-                    case "Nazwisko":
-                        query = query.Where(d => d.LastName.Contains(searchText));
-                        break;
-                    case "Miasto":
-                        query = query.Where(d => d.City.Contains(searchText));
-                        break;
-                    case "Typ":
-                        query = query.Where(d => d.Type.Contains(searchText));
-                        break;
-                    default:
-                        query = query.Where(d =>
-                            d.FirstName.Contains(searchText) ||
-                            d.LastName.Contains(searchText) ||
-                            d.City.Contains(searchText) ||
-                            d.Type.Contains(searchText));
-                        break;
+                if (searchColumn == "Data") {
+                    if (DateTime.TryParse(searchText, out var dt)) {
+
+                        var startOfDay = dt.Date;
+                        var endOfDay = startOfDay.AddDays(1).AddTicks(-1);
+
+                        switch (dateOperator) {
+                            case "Powyżej":
+                                query = query.Where(d => d.Date > endOfDay);
+                                break;
+                            case "Poniżej":
+                                query = query.Where(d => d.Date < startOfDay);
+                                break;
+                            default:
+                                query = query.Where(d => d.Date >= startOfDay && d.Date <= endOfDay);
+                                break;
+                        }
+                    }
+                }
+                else {
+                    switch (searchColumn) {
+                        case "Imię":
+                            query = query.Where(d => d.FirstName.Contains(searchText));
+                            break;
+                        case "Nazwisko":
+                            query = query.Where(d => d.LastName.Contains(searchText));
+                            break;
+                        case "Miasto":
+                            query = query.Where(d => d.City.Contains(searchText));
+                            break;
+                        case "Typ":
+                            query = query.Where(d => d.Type.Contains(searchText));
+                            break;
+                        default:
+                            query = query.Where(d =>
+                                d.FirstName.Contains(searchText) ||
+                                d.LastName.Contains(searchText) ||
+                                d.City.Contains(searchText) ||
+                                d.Type.Contains(searchText));
+                            break;
+                    }
                 }
             }
             return query;

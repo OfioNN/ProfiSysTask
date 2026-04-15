@@ -4,6 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             xmlns:vm="clr-namespace:ProfiSysTask.UI.ViewModels"
+             xmlns:System="clr-namespace:System;assembly=mscorlib" 
              mc:Ignorable="d" 
              d:DesignHeight="600" d:DesignWidth="900"
              Background="#E6E6E6">
@@ -441,14 +443,84 @@
                     </Button>
 
                     <ComboBox Width="130" Margin="0,0,10,0" 
-                              Style="{StaticResource PillComboBoxStyle}"
-                              ItemsSource="{Binding FilterColumns}"
-                              SelectedItem="{Binding SelectedFilterColumn, UpdateSourceTrigger=PropertyChanged}"/>
+              Style="{StaticResource PillComboBoxStyle}"
+              ItemsSource="{Binding FilterColumns}"
+              SelectedItem="{Binding SelectedFilterColumn, UpdateSourceTrigger=PropertyChanged}"/>
 
-                    <TextBox Width="180" Margin="0,0,0,0" 
-                             Style="{StaticResource PillTextBoxStyle}"
-                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
-                             Tag="Szukaj dokumentu..."/>
+                    <ComboBox Width="110" Margin="0,0,10,0" 
+              ItemsSource="{Binding DateOperators}"
+              SelectedItem="{Binding SelectedDateOperator}">
+                        <ComboBox.Style>
+                            <Style TargetType="ComboBox" BasedOn="{StaticResource PillComboBoxStyle}">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedFilterColumn}" Value="Data">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ComboBox.Style>
+                    </ComboBox>
+
+                    <Grid Width="180" Margin="0,0,0,0">
+
+                        <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Tag="Szukaj dokumentu...">
+                            <TextBox.Style>
+                                <Style TargetType="TextBox" BasedOn="{StaticResource PillTextBoxStyle}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedFilterColumn}" Value="Typ">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding SelectedFilterColumn}" Value="Data">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+
+                        <ComboBox ItemsSource="{Binding DocumentTypes}" SelectedItem="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}">
+                            <ComboBox.Style>
+                                <Style TargetType="ComboBox" BasedOn="{StaticResource PillComboBoxStyle}">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedFilterColumn}" Value="Typ">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ComboBox.Style>
+                        </ComboBox>
+
+                        <DatePicker SelectedDate="{Binding SearchDate, UpdateSourceTrigger=PropertyChanged}" 
+                    Width="180" Height="32" HorizontalAlignment="Right"
+                    VerticalContentAlignment="Center" BorderBrush="#CCCCCC" BorderThickness="1" 
+                    Background="White" Cursor="Hand">
+
+                            <DatePicker.Resources>
+                                <Style TargetType="DatePickerTextBox">
+                                    <Setter Property="IsReadOnly" Value="True"/>
+                                    <Setter Property="Cursor" Value="Hand"/>
+                                    <Setter Property="Foreground" Value="#007CC3"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="Padding" Value="5,0,0,0"/>
+                                </Style>
+                            </DatePicker.Resources>
+
+                            <DatePicker.Style>
+                                <Style TargetType="DatePicker">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedFilterColumn}" Value="Data">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DatePicker.Style>
+                        </DatePicker>
+
+                    </Grid>
                 </StackPanel>
             </Grid>
 
@@ -532,11 +604,66 @@
                               Style="{StaticResource PillComboBoxStyle}"
                               ItemsSource="{Binding ItemFilterColumns}"
                               SelectedItem="{Binding SelectedItemFilterColumn, UpdateSourceTrigger=PropertyChanged}"/>
+                    
+                    <ComboBox Width="100" Margin="0,0,10,0"
+                              ItemsSource="{Binding PriceOperators}"
+                              SelectedItem="{Binding SelectedPriceOperator, UpdateSourceTrigger=PropertyChanged}">
+                        <ComboBox.Style>
+                            <Style TargetType="ComboBox" BasedOn="{StaticResource PillComboBoxStyle}">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedItemFilterColumn}" Value="Cena">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ComboBox.Style>
+                    </ComboBox>
+                    
+                    <Grid Width="180" Margin="0,0,0,0">
 
-                    <TextBox Width="180" Margin="0,0,0,0" 
-                             Style="{StaticResource PillTextBoxStyle}"
-                             Text="{Binding ItemSearchText, UpdateSourceTrigger=PropertyChanged}" 
-                             Tag="Szukaj elementu..."/>
+                        <TextBox Text="{Binding ItemSearchText, UpdateSourceTrigger=PropertyChanged}" Tag="Szukaj elementu...">
+                            <TextBox.Style>
+                                <Style TargetType="TextBox" BasedOn="{StaticResource PillTextBoxStyle}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedItemFilterColumn}" Value="Produkt">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding SelectedItemFilterColumn}" Value="VAT">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+
+                        <ComboBox ItemsSource="{Binding ProductsList}" SelectedItem="{Binding ItemSearchText, UpdateSourceTrigger=PropertyChanged}">
+                            <ComboBox.Style>
+                                <Style TargetType="ComboBox" BasedOn="{StaticResource PillComboBoxStyle}">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedItemFilterColumn}" Value="Produkt">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ComboBox.Style>
+                        </ComboBox>
+
+                        <ComboBox ItemsSource="{Binding VatRatesStringList}" SelectedItem="{Binding ItemSearchText, UpdateSourceTrigger=PropertyChanged}">
+                            <ComboBox.Style>
+                                <Style TargetType="ComboBox" BasedOn="{StaticResource PillComboBoxStyle}">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedItemFilterColumn}" Value="VAT">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ComboBox.Style>
+                        </ComboBox>
+                    </Grid>
                 </StackPanel>
             </Grid>
 

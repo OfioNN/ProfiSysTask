@@ -5,9 +5,9 @@ namespace ProfiSysTask.Core.Interfaces {
 
         Task<IEnumerable<Document>> GetAllDocumentsAsync();
 
-        Task<int> GetTotalDocumentsCountAsync(string searchText, string searchColumn);
+        Task<int> GetTotalDocumentsCountAsync(string searchText, string searchColumn, string dateOperator = "");
 
-        Task<IEnumerable<Document>> GetPagedDocumentsAsync(int pageNumber, int pageSize, string searchText, string searchColumn);
+        Task<IEnumerable<Document>> GetPagedDocumentsAsync(int pageNumber, int pageSize, string searchText, string searchColumn, string dateOperator = "");
 
         Task SaveDocumentsAsync(IEnumerable<Document> documents);
 
