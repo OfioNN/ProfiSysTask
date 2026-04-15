@@ -3,8 +3,10 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 using ProfiSysTask.Core.Interfaces;
 using ProfiSysTask.Core.Models;
+using ProfiSysTask.Infrastructure.Services;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Windows;
 using System.Windows.Data;
 
@@ -14,6 +16,7 @@ namespace ProfiSysTask.UI.ViewModels
     {
         private readonly IDocumentRepository _repository;
         private readonly ICsvImporter _csvImporter;
+        private readonly ICsvExporter _csvExporter;
 
         [ObservableProperty]
         private ObservableCollection<Document> _documents = new();
@@ -70,9 +73,10 @@ namespace ProfiSysTask.UI.ViewModels
         partial void OnSelectedItemFilterColumnChanged(string value) => ItemsView?.Refresh();
 
 
-        public DataViewModel(IDocumentRepository repository, ICsvImporter csvImporter) {
+        public DataViewModel(IDocumentRepository repository, ICsvImporter csvImporter, ICsvExporter csvExporter) {
             _repository = repository;
             _csvImporter = csvImporter;
+            _csvExporter = csvExporter;
         }
 
         [RelayCommand]
@@ -126,6 +130,33 @@ namespace ProfiSysTask.UI.ViewModels
             }
             catch (Exception ex) {
                 MessageBox.Show($"Wystąpił błąd podczas importu: {ex.Message}", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        [RelayCommand]
+        private async Task ExportDataAsync() {
+            try {
+                var saveFileDialog = new Microsoft.Win32.SaveFileDialog {
+                    Title = "Wybierz miejsce zapisu eksportu",
+                    Filter = "Plik CSV (*.csv)|*.csv",
+                    FileName = $"{DateTime.Now:yyyyMMdd}_Export"
+                };
+
+                if (saveFileDialog.ShowDialog() != true) return;
+
+                string basePath = saveFileDialog.FileName.Replace(".csv", "");
+
+                var allDocuments = await _repository.GetAllDocumentsAsync();
+
+                await _csvExporter.ExportAsync(basePath, allDocuments);
+
+                await ShowConfirmDialogAsync(
+                    "Eksport zakończony",
+                    $"Baza została pomyślnie wyeksportowana do plików:\n\n• {Path.GetFileName(basePath)}_Documents.csv\n• {Path.GetFileName(basePath)}_DocumentItems.csv",
+                    true);
+            }
+            catch (Exception ex) {
+                MessageBox.Show($"Wystąpił błąd podczas eksportu: {ex.Message}", "Błąd", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

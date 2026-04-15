@@ -20,6 +20,7 @@ namespace ProfiSysTask.UI {
             services.AddDbContext<AppDbContext>();
 
             services.AddTransient<ICsvImporter, CsvImporter>();
+            services.AddTransient<ICsvExporter, CsvExporter>();
             services.AddTransient<IDocumentRepository, DocumentRepository>();
 
             services.AddTransient<StartViewModel>();
