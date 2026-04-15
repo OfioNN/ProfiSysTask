@@ -12,7 +12,13 @@ namespace ProfiSysTask.Infrastructure.DataAccess {
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
-            optionsBuilder.UseSqlite("Data Source=ProfiSysData.db");
+            string dbFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data", "databases");
+
+            if (!Directory.Exists(dbFolder)) Directory.CreateDirectory(dbFolder);
+
+            string dbPath = Path.Combine(dbFolder, "ProfiSysData.db");
+
+            optionsBuilder.UseSqlite($"Data Source={dbPath}");
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder) {

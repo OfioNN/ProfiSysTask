@@ -138,8 +138,11 @@ namespace ProfiSysTask.UI.ViewModels
         [RelayCommand]
         private async Task ExportDataAsync() {
             try {
+                string exportFolder = GetAndEnsureFolder("exports");
+
                 var saveFileDialog = new Microsoft.Win32.SaveFileDialog {
-                    Title = "Wybierz miejsce zapisu eksportu",
+                    InitialDirectory = exportFolder,
+                    Title = "Zapisz eksport plików CSV",
                     Filter = "Plik CSV (*.csv)|*.csv",
                     FileName = $"{DateTime.Now:yyyyMMdd}_Export"
                 };
@@ -187,10 +190,13 @@ namespace ProfiSysTask.UI.ViewModels
             }
 
             try {
+                string reportsFolder = GetAndEnsureFolder("reports");
+
                 var saveFileDialog = new Microsoft.Win32.SaveFileDialog {
+                    InitialDirectory = reportsFolder,
                     Title = "Zapisz raport PDF",
                     Filter = "Plik PDF (*.pdf)|*.pdf",
-                    FileName = $"Raport_Dokument_{SelectedDocument.Id}_{DateTime.Now:yyyyMMdd}"
+                    FileName = $"Raport_Document_{SelectedDocument.Id}_{DateTime.Now:yyyyMMdd}"
                 };
 
                 if (saveFileDialog.ShowDialog() != true) return;
@@ -267,6 +273,12 @@ namespace ProfiSysTask.UI.ViewModels
                            item.Price.ToString().Contains(search) ||
                            item.TaxRate.ToString().Contains(search);
             }
+        }
+
+        private string GetAndEnsureFolder(params string[] subFolders) {
+            string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data", Path.Combine(subFolders));
+            if (!Directory.Exists(path)) Directory.CreateDirectory(path);
+            return path;
         }
 
         private Task<bool> ShowConfirmDialogAsync(string title, string message, bool isInfoOnly = false) {
